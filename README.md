@@ -32,7 +32,7 @@ All data is stored inside a hidden .rex/ directory.
 
 📦 Installation
 # Clone the repository
-git clone https://github.com/your-username/rex.git
+git clone https://github.com/lieutenant-Rohit/rex.git
 
 # Go into project folder
 cd rex
