@@ -1,77 +1,121 @@
-🦖 Rex — A Simple Git-like Version Control System
+# Rex 🦖
+### A Git-like Version Control System built from scratch in Java 21
 
-Rex is a lightweight, Git-inspired version control system built in Python. It implements core version control concepts such as blobs, trees, commits, branching, and checkout — helping you understand how Git works internally.
+Rex is a minimal VCS that replicates core Git internals — content-addressable object storage, tree-based snapshots, branching, and commit history — implemented entirely from scratch without any VCS libraries.
 
-⸻
+---
 
-🚀 Features
+## Features
 
-* Initialize a repository (init)
-* Track files and directories (add)
-* Create commits with history tracking (commit)
-* View commit history (log)
-* Switch branches or commits (checkout)
-* Branch creation support
-* Object storage using SHA-1 hashing
-* Compression using zlib (just like Git!)
+- `init` — Initialize a new Rex repository
+- `add` — Stage files or directories for commit
+- `commit` — Save a snapshot of staged files with a message and author
+- `checkout` — Switch branches or restore a specific commit (supports detached HEAD)
+- `log` — View the full commit history of the current branch
 
-⸻
+---
 
-🧠 How It Works
+## How It Works
 
-Rex mimics Git’s internal architecture:
+Rex follows the same core design Git uses internally:
 
-* Blob → Stores file content
-* Tree → Represents directory structure
-* Commit → Tracks snapshots with metadata
-* Objects → Stored using SHA-1 hashes
-* Index → Tracks staged files
-* HEAD → Points to current branch/commit
+**Object Storage**
+Every file, directory snapshot, and commit is stored as an object identified by its SHA-1 hash. This means identical files are never stored twice — the same content always maps to the same hash.
 
-All data is stored inside a hidden .rex/ directory.
+**Three Object Types**
+| Type | What it represents |
+|---|---|
+| `blob` | A single file's content |
+| `tree` | A directory snapshot (holds blobs and other trees) |
+| `commit` | A pointer to a tree + parent commit + message |
 
-📦 Installation
-# Clone the repository
-git clone https://github.com/lieutenant-Rohit/rex.git
+**On-disk format**
+Objects are stored compressed (zlib) under `.rex/objects/`, split by the first two characters of their hash — exactly how Git does it.
 
-# Go into project folder
+**Branching**
+Branches are simple files under `.rex/refs/heads/` containing a commit hash. `HEAD` either points to a branch ref (attached) or directly to a hash (detached HEAD).
+
+---
+
+## Getting Started
+
+**Requirements:** Java 21 JDK
+
+```bash
+# Clone the repo
+git clone https://github.com/your-username/rex.git
 cd rex
 
-# Check Python installation
-python3 --version
+# Compile
+javac Rex.java
+```
 
-# Run the project
-python3 rex.py
+---
 
-# (Optional) Make executable
-chmod +x rex.py
-./rex.py
+## Usage
 
-🔍 Example Usage
-# Initialize repository
-./rex.py init
+```bash
+# Initialize a new repository
+java Rex init
 
-# Create a file
-echo "Hello Rex" > file.txt
+# Stage files
+java Rex add README.md
+java Rex add src/
 
-# Add file to staging
-./rex.py add file.txt
-
-# Commit changes
-./rex.py commit -m "First commit"
+# Commit staged files
+java Rex commit -m "initial commit"
+java Rex commit -m "add feature" --author "Rohit <rohit@example.com>"
 
 # View commit history
-./rex.py log
+java Rex log
 
 # Create and switch to a new branch
-./rex.py checkout feature --create
+java Rex checkout feature --create
 
-# Modify file
-echo "New change" >> file.txt
+# Switch to an existing branch
+java Rex checkout master
 
-# Add and commit again
-./rex.py add file.txt
-./rex.py commit -m "Updated file"
+# Checkout a specific commit (detached HEAD)
+java Rex checkout a3f9c12
+```
 
-# Switch back to master
-./rex.py checkout master
+---
+
+## Project Structure
+
+```
+.
+├── Rex.java          # Entire implementation (single file)
+└── README.md
+```
+
+**Inside a Rex repository after init + commit:**
+```
+your-project/
+├── .rex/
+│   ├── HEAD                   # Points to current branch or commit
+│   ├── index                  # Staged files (JSON)
+│   ├── objects/               # All blobs, trees, commits (zlib compressed)
+│   │   └── a3/
+│   │       └── f9c12...       # Object stored by SHA-1 hash
+│   └── refs/
+│       └── heads/
+│           └── master         # Branch pointer
+└── your files...
+```
+
+---
+
+## Design Decisions
+
+**Why a single file?**
+Rex is intentionally kept as one file (`Rex.java`) to make it easy to read top-to-bottom and understand the full flow without jumping between packages.
+
+**Why no external libraries?**
+The goal was to understand the internals — SHA-1 hashing, zlib compression, binary tree serialization — by implementing them using only the Java standard library.
+
+**Limitations**
+Rex is a learning project and does not implement:
+- `diff` / `merge`
+- Remote operations (`push`, `pull`, `clone`)
+- `.rexignore` (like `.gitignore`)
